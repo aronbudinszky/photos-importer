@@ -11,8 +11,8 @@
 set nullValue to missing value
 
 -- Import selected folder
-set importFolder to POSIX path of (choose folder with prompt "Select a folder to import into Photos")
-importFolder(importFolder, nullValue)
+set selectedFolder to POSIX path of (choose folder with prompt "Select a folder to import into Photos")
+importFolder(selectedFolder, nullValue)
 
 ###############################################################################################
 # Recursively import files into an album
