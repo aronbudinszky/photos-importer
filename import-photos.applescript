@@ -28,25 +28,18 @@ on importFolder(macFolder, photosAlbumParentFolder)
 
     tell application "Photos"
 
-        -- Create a new album for the current folder
+        -- Create a new Photos folder for the current Mac folder
         tell application "System Events"
             set macFolderName to name of folder macFolder
         end tell
 
-        -- Create the album for the current Mac folder
-        if photosAlbumParentFolder is missing value then
-            set newPhotoAlbum to make new album named macFolderName
-        else
-            set newPhotoAlbum to make new album named macFolderName at photosAlbumParentFolder
-        end if
-
-        -- If there are subfolders, create a folder too
+        -- If there are subfolders, create a Photos subfolder and add a new album to that
         if foldersInMacFolder is not {} then
-            if photosAlbumParentFolder is missing value then
-                set newPhotosFolder to make new folder named macFolderName
-            else
-                set newPhotosFolder to make new folder named macFolderName at photosAlbumParentFolder
-            end if
+            set newPhotosFolder to my createPhotosFolder(macFolderName, photosAlbumParentFolder)
+            set newPhotosAlbum to my createPhotosAlbum(macFolderName, newPhotosFolder)
+        else
+            -- ...otherwise create an album directly in the parent folder
+            set newPhotosAlbum to my createPhotosAlbum(macFolderName, photosAlbumParentFolder)
         end if
 
         -- Import all files in the current album
@@ -61,9 +54,44 @@ on importFolder(macFolder, photosAlbumParentFolder)
 end importFolder
 
 ###############################################################################################
+# Create a Photos folder
+#
+# @param name The desired name of the folder
+# @param photosAlbumParentFolder The parent photo album folder; null if top level
+# @returns The new Photos folder
+on createPhotosFolder(name, photosAlbumParentFolder)
+
+    if photosAlbumParentFolder is missing value then
+        set newPhotosFolder to make new folder named name
+    else
+        set newPhotosFolder to make new folder named name at photosAlbumParentFolder
+    end if
+
+    return newPhotosFolder
+end createPhotosFolder
+
+###############################################################################################
+# Create a Photos album
+#
+# @param name The desired name of the album
+# @param photosAlbumParentFolder The parent photo album folder; null if top level
+# @returns The new Photos album
+on createPhotosAlbum(name, photosAlbumParentFolder)
+
+    if photosAlbumParentFolder is missing value then
+        set newPhotosAlbum to make new album named name
+    else
+        set newPhotosAlbum to make new album named name at photosAlbumParentFolder
+    end if
+
+    return newPhotosAlbum
+end createPhotosAlbum
+
+###############################################################################################
 # Get all files in a folder
 #
 # @param macFolder The folder you want to scan
+# @returns A list of files in the folder
 ###############################################################################################
 on getAllFilesInMacFolder(macFolder)
 
@@ -84,6 +112,7 @@ end functionName
 # Get all subfolders in a folder
 #
 # @param macFolder The folder you want to scan
+# @returns A list of folders in the folder
 ###############################################################################################
 on getAllMacFoldersInMacFolder(macFolder)
 
