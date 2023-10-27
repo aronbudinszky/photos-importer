@@ -15,7 +15,7 @@ set selectedFolder to POSIX path of (choose folder with prompt "Select a folder 
 importFolder(selectedFolder, nullValue)
 
 ###############################################################################################
-# Recursively import files into an album
+# Recursively import files into Photos albums and folders
 #
 # @param macFolder The folder you want to import
 # @param photosAlbumParentFolder The parent photo album folder; null if top level
