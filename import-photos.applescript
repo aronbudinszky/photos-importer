@@ -7,12 +7,9 @@
 # Written by: Aron Budinszky <aron@budinszky.me>
 ###############################################################################################
 
--- Create a helper null value
-set nullValue to missing value
-
 -- Import selected folder
 set selectedFolder to POSIX path of (choose folder with prompt "Select a folder to import into Photos")
-importFolder(selectedFolder, nullValue)
+importFolder(selectedFolder, missing value)
 
 ###############################################################################################
 # Recursively import files into Photos albums and folders
@@ -25,47 +22,55 @@ on importFolder(macFolder, photosAlbumParentFolder)
     -- Get the files and folders in the current folder
     set filesInMacFolder to my getAllFilesInMacFolder(macFolder)
     set foldersInMacFolder to my getAllMacFoldersInMacFolder(macFolder)
+    set newPhotosFolder to missing value
+
+    -- Get the name of the current mac folder
+    tell application "System Events"
+        set macFolderName to name of folder macFolder
+    end tell
 
     tell application "Photos"
-
-        -- Create a new Photos folder for the current Mac folder
-        tell application "System Events"
-            set macFolderName to name of folder macFolder
-        end tell
-
         -- If there are subfolders, create a Photos subfolder and add a new album to that
         if foldersInMacFolder is not {} then
             set newPhotosFolder to my createPhotosFolder(macFolderName, photosAlbumParentFolder)
-            set newPhotosAlbum to my createPhotosAlbum(macFolderName, newPhotosFolder)
-        else
-            -- ...otherwise create an album directly in the parent folder
-            set newPhotosAlbum to my createPhotosAlbum(macFolderName, photosAlbumParentFolder)
         end if
-
-        -- Import all files in the current album
-        import filesInMacFolder into newPhotoAlbum        
     end tell
 
-    # Recursively import all subfolders
+    -- Recursively import all subfolders
     repeat with macFolderItem in foldersInMacFolder
         importFolder(macFolderItem, newPhotosFolder)
     end repeat
 
+    tell application "Photos"
+        -- Decide what will be the parent folder
+        if newPhotosFolder is missing value then
+            set parentFolder to photosAlbumParentFolder
+        else
+            set parentFolder to newPhotosFolder
+        end if
+
+        -- Create album and import all photos (doing this last so it is at the top of the album list)
+        set newPhotosAlbum to my createPhotosAlbum(macFolderName, parentFolder)
+        import filesInMacFolder into newPhotosAlbum        
+    end tell
 end importFolder
 
 ###############################################################################################
 # Create a Photos folder
 #
-# @param name The desired name of the folder
+# @param folderName The desired name of the folder
 # @param photosAlbumParentFolder The parent photo album folder; null if top level
 # @returns The new Photos folder
-on createPhotosFolder(name, photosAlbumParentFolder)
+###############################################################################################
+on createPhotosFolder(folderName, photosAlbumParentFolder)
 
-    if photosAlbumParentFolder is missing value then
-        set newPhotosFolder to make new folder named name
-    else
-        set newPhotosFolder to make new folder named name at photosAlbumParentFolder
-    end if
+    tell application "Photos"
+        if photosAlbumParentFolder is missing value then
+            set newPhotosFolder to make new folder named folderName
+        else
+            set newPhotosFolder to make new folder named folderName at photosAlbumParentFolder
+        end if
+    end tell
 
     return newPhotosFolder
 end createPhotosFolder
@@ -73,16 +78,19 @@ end createPhotosFolder
 ###############################################################################################
 # Create a Photos album
 #
-# @param name The desired name of the album
+# @param albumName The desired name of the album
 # @param photosAlbumParentFolder The parent photo album folder; null if top level
 # @returns The new Photos album
-on createPhotosAlbum(name, photosAlbumParentFolder)
+###############################################################################################
+on createPhotosAlbum(albumName, photosAlbumParentFolder)
 
-    if photosAlbumParentFolder is missing value then
-        set newPhotosAlbum to make new album named name
-    else
-        set newPhotosAlbum to make new album named name at photosAlbumParentFolder
-    end if
+    tell application "Photos"
+        if photosAlbumParentFolder is missing value then
+            set newPhotosAlbum to make new album named albumName
+        else
+            set newPhotosAlbum to make new album named albumName at photosAlbumParentFolder
+        end if
+    end tell
 
     return newPhotosAlbum
 end createPhotosAlbum
