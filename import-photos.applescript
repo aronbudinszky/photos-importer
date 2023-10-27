@@ -1,25 +1,36 @@
+###############################################################################################
+# This script imports a folder of photos into Photos, creating albums and folders as needed
+#
+# It will create a new album for each folder it finds, importing all photos in it into the
+#   album. If there are subfolders, it will create a folder in Photos and repeat the process.
+#
+# Written by: Aron Budinszky <aron@budinszky.me>
+###############################################################################################
+
 -- Create a helper null value
 set nullValue to missing value
 
 -- Import selected folder
-set importFolderPath to POSIX path of (choose folder with prompt "Select a folder to import into Photos")
-importFolder(importFolderPath, nullValue)
+set importFolder to POSIX path of (choose folder with prompt "Select a folder to import into Photos")
+importFolder(importFolder, nullValue)
 
-
-#############################################
+###############################################################################################
 # Recursively import files into an album
-#############################################
-on importFolder(macFolderPath, photosAlbumParentFolder)
+#
+# @param macFolder The folder you want to import
+# @param photosAlbumParentFolder The parent photo album folder; null if top level
+###############################################################################################
+on importFolder(macFolder, photosAlbumParentFolder)
 
     -- Get the files and folders in the current folder
-    set filesInMacFolder to my getAllFilesInMacFolder(macFolderPath)
-    set foldersInMacFolder to my getAllMacFoldersInMacFolder(macFolderPath)
+    set filesInMacFolder to my getAllFilesInMacFolder(macFolder)
+    set foldersInMacFolder to my getAllMacFoldersInMacFolder(macFolder)
 
     tell application "Photos"
 
         -- Create a new album for the current folder
         tell application "System Events"
-            set macFolderName to name of folder macFolderPath
+            set macFolderName to name of folder macFolder
         end tell
 
         -- Create the album for the current Mac folder
@@ -49,16 +60,17 @@ on importFolder(macFolderPath, photosAlbumParentFolder)
 
 end importFolder
 
-#############################################
+###############################################################################################
 # Get all files in a folder
-#############################################
-on getAllFilesInMacFolder(macFolderPath)
+#
+# @param macFolder The folder you want to scan
+###############################################################################################
+on getAllFilesInMacFolder(macFolder)
 
-    -- Create a list to store the file paths
     set fileList to {}
 
     tell application "System Events"
-        set folderContents to every file of folder macFolderPath
+        set folderContents to every file of folder macFolder
         repeat with fileItem in folderContents
             set fileItemPath to POSIX path of fileItem
             set end of fileList to fileItemPath
@@ -68,16 +80,17 @@ on getAllFilesInMacFolder(macFolderPath)
     return fileList
 end functionName
 
-#############################################
+###############################################################################################
 # Get all subfolders in a folder
-#############################################
-on getAllMacFoldersInMacFolder(macFolderPath)
+#
+# @param macFolder The folder you want to scan
+###############################################################################################
+on getAllMacFoldersInMacFolder(macFolder)
 
-    -- Create a list to store the file paths
     set folderList to {}
 
     tell application "System Events"
-        set folderContents to every folder of folder macFolderPath
+        set folderContents to every folder of folder macFolder
         repeat with fileItem in folderContents
             set fileItemPath to POSIX path of fileItem
             set end of folderList to fileItemPath
