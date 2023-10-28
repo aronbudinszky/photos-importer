@@ -37,7 +37,9 @@ on importFolder(macFolder, photosAlbumParentFolder)
     end tell
 
     -- Recursively import all subfolders
-    repeat with macFolderItem in foldersInMacFolder
+    -- (in reverse, because the last one imported will be at the top of the album list)
+    repeat with i from (count of foldersInMacFolder) to 1 by -1
+        set macFolderItem to item i of foldersInMacFolder
         importFolder(macFolderItem, newPhotosFolder)
     end repeat
 
@@ -49,9 +51,12 @@ on importFolder(macFolder, photosAlbumParentFolder)
             set parentFolder to newPhotosFolder
         end if
 
-        -- Create album and import all photos (doing this last so it is at the top of the album list)
-        set newPhotosAlbum to my createPhotosAlbum(macFolderName, parentFolder)
-        import filesInMacFolder into newPhotosAlbum        
+        -- Create album and import all photos
+        -- (doing this last so it is at the top of the album list)
+        if filesInMacFolder is not {} then
+            set newPhotosAlbum to my createPhotosAlbum(macFolderName, parentFolder)
+            import filesInMacFolder into newPhotosAlbum
+        end if
     end tell
 end importFolder
 
@@ -113,7 +118,9 @@ on getAllFilesInMacFolder(macFolder)
         end repeat
     end tell
 
-    return fileList
+    set sortedFileList to my sortList(fileList)
+
+    return sortedFileList
 end functionName
 
 ###############################################################################################
@@ -134,5 +141,36 @@ on getAllMacFoldersInMacFolder(macFolder)
         end repeat
     end tell
 
-    return folderList
+    set sortedFileList to my sortList(folderList)
+
+    return sortedFileList
 end functionName
+
+###############################################################################################
+# Sort a list of items alphabetically, such as a file list
+#
+# @param list The list you want to sort
+# @returns The sorted list
+###############################################################################################
+on sortList(theList)
+    set theIndexList to {}
+    set theSortedList to {}
+    repeat (length of theList) times
+        set theLowItem to ""
+        repeat with a from 1 to (length of theList)
+            if a is not in theIndexList then
+                set theCurrentItem to item a of theList as text
+                if theLowItem is "" then
+                    set theLowItem to theCurrentItem
+                    set theLowItemIndex to a
+                else if theCurrentItem comes before theLowItem then
+                    set theLowItem to theCurrentItem
+                    set theLowItemIndex to a
+                end if
+            end if
+        end repeat
+        set end of theSortedList to theLowItem
+        set end of theIndexList to theLowItemIndex
+    end repeat
+    return theSortedList
+end sortList
